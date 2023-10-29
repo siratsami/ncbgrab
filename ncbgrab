@@ -1,0 +1,26 @@
+#!/bin/bash
+
+grab_banner() {
+  ip="$1"
+  port="$2"
+  banner=$(echo -e "GET /" | nc -v -n -w 1 "$ip" "$port" 2>&1)
+  echo "Banner for $ip:$port:"
+  echo "$banner"
+  echo "-----------------------------"
+}
+
+export -f grab_banner
+
+if [ $# -eq 2 ] && [ "$1" = "-l" ]; then
+  input_file="$2"
+  # Ensure the input file exists
+  if [ ! -f "$input_file" ]; then
+    echo "Error: Input file not found."
+    exit 1
+  fi
+else
+  echo "Usage: $0 -l input_file"
+  exit 1
+fi
+
+cat "$input_file" | parallel -j5 --colsep ':' grab_banner {1} {2} 2>/dev/null
